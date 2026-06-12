@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Interface</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; display: flex; flex-direction: column; height: 100vh; margin: 0; }
+        #chat-container { flex: 1; overflow-y: auto; padding: 20px; max-width: 800px; margin: auto; width: 100%; }
+        .message { margin-bottom: 20px; padding: 10px; border-radius: 10px; }
+        .user { background: #eef3f7; text-align: right; }
+        .ai { background: #ffffff; border: 1px solid #ddd; }
+        #input-area { padding: 20px; background: #fff; border-top: 1px solid #ccc; display: flex; gap: 10px; max-width: 800px; margin: auto; width: 100%; }
+        input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; outline: none; }
+        button { padding: 10px 20px; background: #4285f4; color: white; border: none; border-radius: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id="chat-container"></div>
+    <div id="input-area">
+        <input type="text" id="userInput" placeholder="与 Gemini 对话...">
+        <button onclick="sendMessage()">发送</button>
+    </div>
+
+    <script>
+        const PROXY_URL = 'https://gproxy-xao4.vercel.app'; // 你的 Vercel 地址
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const chat = document.getElementById('chat-container');
+            const text = input.value;
+            if (!text) return;
+
+            chat.innerHTML += `<div class="message user">${text}</div>`;
+            input.value = '';
+
+            const response = await fetch(`${PROXY_URL}/v1beta/models/gemini-3.5-flash:generateContent`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text }] }] })
+            });
+
+            const data = await response.json();
+            const aiText = data.candidates[0].content.parts[0].text;
+            chat.innerHTML += `<div class="message ai">${aiText}</div>`;
+            chat.scrollTop = chat.scrollHeight;
+        }
+    </script>
+</body>
+</html>
